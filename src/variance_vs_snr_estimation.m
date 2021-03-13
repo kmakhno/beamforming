@@ -3,12 +3,12 @@ clear;
 clc;
 
 c = physconst('LightSpeed');
-f0 = 36e9;
+f0 = 9.6e9;
 B = 100e6;
 T = 100e-6;
 alpha = B/T;
 fs = 2*B;
-Np = 2;
+Np = 1;
 %ULA parameters
 N_tx = 1;
 N_rx = 4;
@@ -29,16 +29,16 @@ phi = 2*pi*(0:N_rx-1)'*d.*sin(theta)/lambda;
 a = exp(-1i*phi);
 
 %Source angle
-theta0 = [deg2rad(0)];
+theta0 = [deg2rad(30)];
 %Distance to source
 r = [1000];
 N_src = length(theta0);
-td = 2*r/c;
-a0 = exp(-1i*2*pi*(0:N_rx-1)'.*d*sin(theta0)/lambda);
+%different delay for each channel
+td = 2*r/c+(0:N_rx-1)*d*sin(theta0)/c;
 %Received signal without noize
-s = {1,N_src};
+s = {};
 for i = 1:N_src
-    s{i} = exp(1i*2*pi*(-B/2*mod(t-td(i),T) + .5*alpha*mod(t-td(i),T).^2))*exp(1i*2*pi*f0*td(i)).*a0(:,i);
+    s{i} = exp(1i*2*pi*(-B/2*mod(repmat(t,4,1)-td',T) + .5*alpha*mod(repmat(t,4,1)-td',T).^2)).*exp(1i*2*pi*f0*td');
 end
 
 %Find total signal at each channel from each source
@@ -76,7 +76,10 @@ pmu = 10*log10(pmu/max(pmu));
 s_rx_sum = sum(s_rx_n,1);
 
 rs = xcorr(s_tx, s_tx);
+%make phase compensation
 
+s_rx_phase_comp = s_rx_n.*a(:,12000);
+s_rx_0 = sum(s_rx_phase_comp,1);
 %% Plots
 figure
 for i = 1:N_rx
@@ -95,6 +98,11 @@ title('Simple rx signals sum');
 grid on
 
 figure
-plot(real(rs));
-title('Correlation');
+plot(real(s_rx_0));
+title('Phased compensated rx signals sum');
 grid on
+
+% figure
+% plot(real(rs));
+% title('Correlation');
+% grid on
