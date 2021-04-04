@@ -95,3 +95,12 @@ stem(vv, abs(Sdop_sum));
 title('Doppler processing');
 xlabel('Velocity, m/s');
 grid on
+
+figure
+surf(vv, dd, 10*log10(abs(fftshift(Sdop,1))), 'EdgeColor', 'none');
+title('Range-Doppler map');
+ylabel('Range, m');
+xlabel('Velocity, m/s');
+xlim([vv(1) vv(end)]);
+ylim([dd(1) dd(end)]);
+view(2)
